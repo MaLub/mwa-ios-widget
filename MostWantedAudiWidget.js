@@ -27,9 +27,7 @@ if (config.runsInWidget) {
 function createWidget(title, img) {
   let w = new ListWidget()
   w.backgroundColor = new Color("#1A1A1A")
-  w.centerAlignContent()
   let image = w.addImage(img);
-  image.centerAlignImage();
   image.imageSize = new Size(150,150)
   return w
 }
