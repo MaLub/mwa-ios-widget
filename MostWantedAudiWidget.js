@@ -1,33 +1,56 @@
 // Variables used by Scriptable.
 // These must be at the very top of the file. Do not edit.
-// icon-color: black; icon-glyph: user-md;
+// icon-color: pink; icon-glyph: magic;
 
-// just replace the url below with the url if the channel you want to use
-// image channels only, doesnt supoort text or anything else
-const channel = 'https://www.are.na/una/color-tx32pz_qsu0'
+//@ts-check
 
-const url = 'https://api.are.na/v2/channels/'+channel.substring(channel.lastIndexOf('/') + 1)+'/contents';
-const req = new Request(url)
-const res = await req.loadJSON()
-const randomBlock = await res.contents[Math.floor(Math.random() * res.contents.length)];
-const id = randomBlock.id
-const i = await new Request(randomBlock.image.square.url);
-const img = await i.loadImage();
+/**
+ * Create the widget
+ * @param {{widgetParameter: string, debug: string}} config widget configuration
+ */
+async function createWidget(config) {
+    const widget = new ListWidget()
 
-if (config.runsInWidget) {
-  // create and show widget
-  let widget = createWidget("Are.na random image", img)
-  Script.setWidget(widget)
-  Script.complete()
-} else {
-  Safari.open("https://are.na/block/"+id)
+    const log = config.debug ? console.log.bind(console) : function () {};
+    log(JSON.stringify(config, null, 2))
+
+    let carline = 'etron' // Default
+    let param = config.widgetParameter
+    if (param != null && param.length > 0) {
+        carline = param
+    }
+    try {
+
+        //  URL
+        const mwaRequest = new Request("https://mwa-api.apps.emea.vwapps.io/v2/mwa/carline/" + carline + "/de-DE");
+        const mwaResponse = await mwaRequest.loadJSON();
+        widget.setPadding(0, 0, 0, 0);
+        widget.backgroundColor = new Color("#000000")
+
+        const req = new Request(mwaResponse.renderPicture);
+        const image = await req.loadImage();
+        widget.addImage(image);
+
+        widget.url='https://mwa-fe.apps.emea.vwapps.io/?carline='+carline
+
+    } catch (error) {
+        log(JSON.stringify(error))
+        widget.addSpacer(4)
+
+        widget.backgroundColor = new Color("#ff0000")
+        widget.setPadding(10, 10, 10, 10)
+
+        widget.addText("no data found for " + carline)
+
+        let currentTime = new Date().toLocaleTimeString('de-DE', {
+            hour: "numeric",
+            minute: "numeric"
+        })
+        widget.addText(currentTime)
+    }
+    return widget
 }
 
-
-function createWidget(title, img) {
-  let w = new ListWidget()
-  w.backgroundColor = new Color("#1A1A1A")
-  let image = w.addImage(img);
-  image.imageSize = new Size(150,150)
-  return w
+module.exports = {
+    createWidget
 }
